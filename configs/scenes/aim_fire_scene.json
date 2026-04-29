@@ -1,0 +1,191 @@
+{
+  "scene_id": "aim_fire_open_lanes",
+  "map_size": [
+    1000.0,
+    1000.0
+  ],
+  "obstacles": [],
+  "reset_templates": [
+    {
+      "template_id": "aim_fire_1v1",
+      "red_spawns": [
+        {
+          "mode": "point",
+          "point": [
+            120.0,
+            500.0
+          ]
+        }
+      ],
+      "blue_spawns": [
+        {
+          "mode": "point",
+          "point": [
+            880.0,
+            500.0
+          ]
+        }
+      ],
+      "red_count": 1,
+      "blue_count": 1,
+      "red_heading_range": [
+        0.0,
+        360.0
+      ],
+      "blue_heading_range": [
+        90.0,
+        90.0
+      ],
+      "enemy_policies": {
+        "0": {
+          "name": "idle",
+          "params": {}
+        }
+      }
+    },
+    {
+      "template_id": "aim_fire_2v2",
+      "red_spawns": [
+        {
+          "mode": "point",
+          "point": [
+            120.0,
+            250.0
+          ]
+        },
+        {
+          "mode": "point",
+          "point": [
+            120.0,
+            750.0
+          ]
+        }
+      ],
+      "blue_spawns": [
+        {
+          "mode": "point",
+          "point": [
+            880.0,
+            250.0
+          ]
+        },
+        {
+          "mode": "point",
+          "point": [
+            880.0,
+            750.0
+          ]
+        }
+      ],
+      "red_count": 2,
+      "blue_count": 2,
+      "red_heading_range": [
+        0.0,
+        360.0
+      ],
+      "blue_heading_range": [
+        90.0,
+        90.0
+      ],
+      "ally_policies": {
+        "1": {
+          "name": "aim_closest",
+          "params": {}
+        }
+      },
+      "enemy_policies": {
+        "0": {
+          "name": "idle",
+          "params": {}
+        },
+        "1": {
+          "name": "idle",
+          "params": {}
+        }
+      }
+    },
+    {
+      "template_id": "aim_fire_3v3",
+      "red_spawns": [
+        {
+          "mode": "point",
+          "point": [
+            120.0,
+            180.0
+          ]
+        },
+        {
+          "mode": "point",
+          "point": [
+            120.0,
+            500.0
+          ]
+        },
+        {
+          "mode": "point",
+          "point": [
+            120.0,
+            820.0
+          ]
+        }
+      ],
+      "blue_spawns": [
+        {
+          "mode": "point",
+          "point": [
+            880.0,
+            180.0
+          ]
+        },
+        {
+          "mode": "point",
+          "point": [
+            880.0,
+            500.0
+          ]
+        },
+        {
+          "mode": "point",
+          "point": [
+            880.0,
+            820.0
+          ]
+        }
+      ],
+      "red_count": 3,
+      "blue_count": 3,
+      "red_heading_range": [
+        0.0,
+        360.0
+      ],
+      "blue_heading_range": [
+        90.0,
+        90.0
+      ],
+      "ally_policies": {
+        "1": {
+          "name": "aim_closest",
+          "params": {}
+        },
+        "2": {
+          "name": "aim_closest",
+          "params": {}
+        }
+      },
+      "enemy_policies": {
+        "0": {
+          "name": "idle",
+          "params": {}
+        },
+        "1": {
+          "name": "idle",
+          "params": {}
+        },
+        "2": {
+          "name": "idle",
+          "params": {}
+        }
+      }
+    }
+  ]
+}

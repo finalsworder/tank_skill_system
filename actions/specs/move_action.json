@@ -1,0 +1,61 @@
+{
+  "action_id": "move",
+  "description": "机动到目标点，环境自动开火。",
+  "action_mask": [
+    0,
+    1
+  ],
+  "task_slots": {
+    "target_x": {
+      "mode": "range",
+      "low": 120.0,
+      "high": 880.0
+    },
+    "target_y": {
+      "mode": "range",
+      "low": 120.0,
+      "high": 880.0
+    },
+    "ally_id": {
+      "mode": "none"
+    },
+    "enemy_id": {
+      "mode": "none"
+    }
+  },
+  "reward_weights": {
+    "progress_to_target_point": 0.2,
+    "distance_to_target": -0.6,
+    "arrive_target_point": 10.0,
+    "heading_align_to_target_point": 0.0,
+    "forward_speed": 0.05,
+    "body_turn_rate": -0.05,
+    "collision_penalty": -0.2,
+    "under_observation": 0.0,
+    "time_penalty": -0.005
+  },
+  "intel": {
+    "reveal_selected_enemy_on_reset": false,
+    "share_team_memory": true
+  },
+  "termination": {
+    "success": [
+      "reach_target_point"
+    ],
+    "failure": [
+      "self_destroyed"
+    ],
+    "max_steps": 200,
+    "reach_radius": 50.0,
+    "hold_steps": 2
+  },
+  "observation": {
+    "radar_num_rays": 72,
+    "radar_max_distance": 400.0,
+    "radar_body_relative": true,
+    "radar_invert": true,
+    "max_allies": 2,
+    "max_enemies": 3
+  },
+  "reset_templates": []
+}

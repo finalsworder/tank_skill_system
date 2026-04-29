@@ -1,0 +1,235 @@
+{
+  "scene_id": "attack_cross_obstacles",
+  "map_size": [
+    1000.0,
+    1000.0
+  ],
+  "obstacles": [
+    [
+      300,
+      300,
+      150
+    ],
+    [
+      500,
+      500,
+      150
+    ],
+    [
+      700,
+      700,
+      150
+    ],
+    [
+      300,
+      700,
+      150
+    ],
+    [
+      700,
+      300,
+      150
+    ]
+  ],
+  "reset_templates": [
+    {
+      "template_id": "attack_1v1",
+      "red_spawns": [
+        {
+          "mode": "region",
+          "rect": [
+            60,
+            60,
+            120,
+            120
+          ]
+        }
+      ],
+      "blue_spawns": [
+        {
+          "mode": "region",
+          "rect": [
+            820,
+            820,
+            120,
+            120
+          ]
+        }
+      ],
+      "red_count": 1,
+      "blue_count": 1,
+      "initial_known_enemy_ids": [],
+      "enemy_policies": {
+        "0": {
+          "name": "attack_point",
+          "params": {
+            "target_x": 500.0,
+            "target_y": 750.0
+          }
+        }
+      }
+    },
+    {
+      "template_id": "attack_2v2",
+      "red_spawns": [
+        {
+          "mode": "region",
+          "rect": [
+            60,
+            60,
+            120,
+            120
+          ]
+        },
+        {
+          "mode": "region",
+          "rect": [
+            60,
+            820,
+            120,
+            120
+          ]
+        }
+      ],
+      "blue_spawns": [
+        {
+          "mode": "region",
+          "rect": [
+            820,
+            820,
+            120,
+            120
+          ]
+        },
+        {
+          "mode": "region",
+          "rect": [
+            820,
+            60,
+            120,
+            120
+          ]
+        }
+      ],
+      "red_count": 2,
+      "blue_count": 2,
+      "initial_known_enemy_ids": [],
+      "ally_policies": {
+        "1": {
+          "name": "aim_closest",
+          "params": {}
+        }
+      },
+      "enemy_policies": {
+        "0": {
+          "name": "attack_point",
+          "params": {
+            "target_x": 500.0,
+            "target_y": 250.0
+          }
+        },
+        "1": {
+          "name": "aim_closest",
+          "params": {}
+        }
+      }
+    },
+    {
+      "template_id": "attack_3v3",
+      "red_spawns": [
+        {
+          "mode": "region",
+          "rect": [
+            60,
+            60,
+            120,
+            120
+          ]
+        },
+        {
+          "mode": "region",
+          "rect": [
+            60,
+            820,
+            120,
+            120
+          ]
+        },
+        {
+          "mode": "region",
+          "rect": [
+            60,
+            430,
+            120,
+            120
+          ]
+        }
+      ],
+      "blue_spawns": [
+        {
+          "mode": "region",
+          "rect": [
+            820,
+            820,
+            120,
+            120
+          ]
+        },
+        {
+          "mode": "region",
+          "rect": [
+            820,
+            60,
+            120,
+            120
+          ]
+        },
+        {
+          "mode": "region",
+          "rect": [
+            820,
+            430,
+            120,
+            120
+          ]
+        }
+      ],
+      "red_count": 3,
+      "blue_count": 3,
+      "initial_known_enemy_ids": [],
+      "ally_policies": {
+        "1": {
+          "name": "aim_closest",
+          "params": {}
+        },
+        "2": {
+          "name": "attack_point",
+          "params": {
+            "target_x": 350.0,
+            "target_y": 500.0
+          }
+        }
+      },
+      "enemy_policies": {
+        "0": {
+          "name": "attack_point",
+          "params": {
+            "target_x": 500.0,
+            "target_y": 750.0
+          }
+        },
+        "1": {
+          "name": "aim_closest",
+          "params": {}
+        },
+        "2": {
+          "name": "attack_point",
+          "params": {
+            "target_x": 650.0,
+            "target_y": 500.0
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Training outputs and model artifacts
+logs/
+swanlog/
+actions/trained/
+*.pt
+*.pth
+*.ckpt
+
+# Temporary archives / generated traces
+env.zip
+*.zip
+*.tar
+*.tar.gz
+
+# Large media/debug dumps
+*.mp4
+*.avi
+*.gif

@@ -1,0 +1,64 @@
+{
+  "action_id": "attack",
+  "description": "攻击指定敌方单位，环境自动开火。",
+  "action_mask": [
+    0,
+    1,
+    2
+  ],
+  "task_slots": {
+    "target_x": {
+      "mode": "none"
+    },
+    "target_y": {
+      "mode": "none"
+    },
+    "ally_id": {
+      "mode": "none"
+    },
+    "enemy_id": {
+      "mode": "choice",
+      "choices": [
+        0,
+        1,
+        2
+      ]
+    }
+  },
+  "reward_weights": {
+    "progress_to_selected_enemy": 0.5,
+    "selected_enemy_proximity": 0.05,
+    "aim_align_selected_enemy": 1,
+    "selected_enemy_visible": 0.02,
+    "selected_enemy_memory_valid": 0,
+    "hit_selected_enemy": 20.0,
+    "destroy_selected_enemy": 100.0,
+    "hit_any_enemy": 0.5,
+    "self_hit": 0,
+    "self_destroyed": 0,
+    "time_penalty": -0.02,
+    "collision_penalty": -0.5
+  },
+  "intel": {
+    "reveal_selected_enemy_on_reset": true,
+    "share_team_memory": true
+  },
+  "termination": {
+    "success": [
+      "selected_enemy_destroyed"
+    ],
+    "failure": [
+      "self_destroyed"
+    ],
+    "max_steps": 200,
+    "reach_radius": 32.0,
+    "hold_steps": 1
+  },
+  "observation": {
+    "radar_num_rays": 72,
+    "radar_max_distance": 400.0,
+    "radar_body_relative": true,
+    "max_allies": 2,
+    "max_enemies": 3
+  }
+}

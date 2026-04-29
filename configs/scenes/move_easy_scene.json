@@ -1,0 +1,40 @@
+{
+  "scene_id": "move_easy_1v1",
+  "map_size": [
+    1000.0,
+    1000.0
+  ],
+  "obstacles": [],
+  "reset_templates": [
+    {
+      "template_id": "move_easy_1v1_fixed",
+      "red_spawns": [
+        {
+          "mode": "point",
+          "point": [
+            10.0,
+            10.0
+          ]
+        }
+      ],
+      "blue_spawns": [
+        {
+          "mode": "point",
+          "point": [
+            900.0,
+            900.0
+          ]
+        }
+      ],
+      "red_count": 1,
+      "blue_count": 1,
+      "enemy_policies": {
+        "0": {
+          "name": "idle",
+          "params": {}
+        }
+      }
+    }
+  ]
+}
+
