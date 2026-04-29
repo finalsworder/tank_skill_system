@@ -22,6 +22,7 @@ Thumbs.db
 !.env.example
 
 # Training outputs and model artifacts
+actions/specs/
 logs/
 swanlog/
 actions/trained/

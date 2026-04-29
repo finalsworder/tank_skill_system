@@ -14,7 +14,7 @@ pip install -r requirements.txt
 
 ```powershell
 python train_skill.py `
-  --action-spec configs/tasks/move_task.json `
+  --task-config configs/tasks/move_task.json `
   --scene-config configs/scenes/move_scene.json `
   --output-dir actions/trained/move `
   --num-envs 8 `
@@ -27,5 +27,7 @@ python train_skill.py `
 ```powershell
 python demo_scripted_3v3.py
 ```
+
+Training task and scene definitions live under `configs/`. The `actions/` tree is reserved for trained skill registration and local model bundles; training creates `actions/trained/<action_id>/registration.json` at startup so interrupted runs still leave a registry record.
 
 Training outputs, checkpoints, logs, local IDE files, and cache files are intentionally ignored by git. Keep source code and JSON configs in the repository; keep trained model bundles local unless you explicitly want to publish them separately.

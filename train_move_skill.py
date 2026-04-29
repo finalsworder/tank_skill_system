@@ -1,6 +1,6 @@
-from train_skill import TrainRuntimeConfig, train_from_spec_paths
+from train_skill import TrainRuntimeConfig, train_from_config_paths
 
-ACTION_SPEC = 'configs/tasks/move_task.json'
+TASK_CONFIG = 'configs/tasks/move_task.json'
 SCENE_CONFIG = 'configs/scenes/move_scene.json'
 OUTPUT_DIR = 'actions/trained/move'
 NUM_ENVS = 32
@@ -21,26 +21,13 @@ SWANLAB_PROJECT = 'tank-move-skill'
 POLICY_HIDDEN_DIM = 512
 POLICY_ATTENTION_HEADS = 2
 POLICY_SELF_LAYERS = 3
-POLICY_SELF_ENCODER = 'raw'
 POLICY_ENTITY_LAYERS = 1
 POLICY_TRUNK_LAYERS = 2
 POLICY_ACTIVATION = 'silu'
-POLICY_LOG_STD_INIT = -0.5
-POLICY_LOG_STD_MIN = -3.0
-POLICY_LOG_STD_MAX = -0.5
-RADAR_CNN_CHANNELS1 = 0
-RADAR_CNN_CHANNELS2 = 0
-RADAR_CNN_KERNEL1 = 5
-RADAR_CNN_KERNEL2 = 3
-RADAR_CNN_POOL = 'max'
-
-if USE_SWANLAB:
-    import swanlab
-    swanlab.login(api_key="CboKBhbXjjOrAjg5ACIV0", save=True)
 
 if __name__ == '__main__':
-    train_from_spec_paths(
-        ACTION_SPEC,
+    train_from_config_paths(
+        TASK_CONFIG,
         SCENE_CONFIG,
         TrainRuntimeConfig(
             output_dir=OUTPUT_DIR,

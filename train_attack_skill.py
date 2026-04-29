@@ -1,6 +1,6 @@
-from train_skill import TrainRuntimeConfig, train_from_spec_paths
+from train_skill import TrainRuntimeConfig, train_from_config_paths
 
-ACTION_SPEC = 'actions/specs/attack_action.json'
+TASK_CONFIG = 'configs/tasks/attack_task.json'
 SCENE_CONFIG = 'configs/scenes/attack_scene.json'
 OUTPUT_DIR = 'actions/trained/attack'
 NUM_ENVS = 100
@@ -24,17 +24,10 @@ POLICY_SELF_LAYERS = 3
 POLICY_ENTITY_LAYERS = 2
 POLICY_TRUNK_LAYERS = 3
 POLICY_ACTIVATION = 'silu'
-POLICY_LOG_STD_INIT = -0.5
-POLICY_LOG_STD_MIN = -3.0
-POLICY_LOG_STD_MAX = -0.5
-
-if USE_SWANLAB:
-    import swanlab
-    swanlab.login(api_key="CboKBhbXjjOrAjg5ACIV0", save=True)
 
 if __name__ == '__main__':
-    train_from_spec_paths(
-        ACTION_SPEC,
+    train_from_config_paths(
+        TASK_CONFIG,
         SCENE_CONFIG,
         TrainRuntimeConfig(
             output_dir=OUTPUT_DIR,
@@ -59,8 +52,5 @@ if __name__ == '__main__':
             policy_entity_layers=POLICY_ENTITY_LAYERS,
             policy_trunk_layers=POLICY_TRUNK_LAYERS,
             policy_activation=POLICY_ACTIVATION,
-            policy_log_std_init=POLICY_LOG_STD_INIT,
-            policy_log_std_min=POLICY_LOG_STD_MIN,
-            policy_log_std_max=POLICY_LOG_STD_MAX,
         ),
     )

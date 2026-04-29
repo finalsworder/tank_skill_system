@@ -9,12 +9,14 @@ from pathlib import Path
 from env.combat_env import SingleSkillEnv
 from env.specs import ActionSpec, load_json
 from parallel_runner.env_runner import ParallelEnvRunner
+from ppo.action_registry import ActionRegistry
 from ppo.ppo_trainer import PPOConfig, PPOTrainer
 
 
 @dataclass
 class TrainRuntimeConfig:
-    output_dir: str
+    output_dir: str | None = None
+    registry_dir: str = 'actions/trained'
     num_envs: int = 8
     episodes_per_env: int = 32
     update_epochs: int = 4
@@ -41,8 +43,11 @@ class TrainRuntimeConfig:
         return asdict(self)
 
 
-def load_training_inputs(action_spec_path: str | Path, scene_config_path: str | Path):
-    action_spec_data = load_json(action_spec_path)
+def load_training_inputs(task_config_path: str | Path, scene_config_path: str | Path):
+    task_config_path = Path(task_config_path)
+    if 'actions' in task_config_path.parts and 'specs' in task_config_path.parts:
+        raise ValueError('Training task configs must be loaded from configs/tasks, not actions/specs.')
+    action_spec_data = load_json(task_config_path)
     scene_data = load_json(scene_config_path)
     from env.specs import SceneConfig
 
@@ -55,14 +60,13 @@ def load_training_inputs(action_spec_path: str | Path, scene_config_path: str | 
 
 
 def train_from_config_paths(task_config_path: str | Path, scene_config_path: str | Path, runtime_cfg: TrainRuntimeConfig):
-    # Backward compatible entry: "task_config" historically stored an ActionSpec-like JSON.
-    return train_from_spec_paths(task_config_path, scene_config_path, runtime_cfg)
-
-
-def train_from_spec_paths(action_spec_path: str | Path, scene_config_path: str | Path, runtime_cfg: TrainRuntimeConfig):
-    action_spec, action_spec_data, scene_data = load_training_inputs(action_spec_path, scene_config_path)
+    action_spec, action_spec_data, scene_data = load_training_inputs(task_config_path, scene_config_path)
     if runtime_cfg.max_time is not None:
         action_spec.termination.max_steps = int(runtime_cfg.max_time)
+    registry = ActionRegistry(runtime_cfg.registry_dir)
+    output_dir = Path(runtime_cfg.output_dir) if runtime_cfg.output_dir else registry.action_dir(action_spec.action_id)
+    runtime_cfg.output_dir = str(output_dir)
+    registry.register_training(action_spec, task_config_path, scene_config_path, output_dir=output_dir)
     env_kwargs_list = [
         {
             'action_spec': action_spec,
@@ -95,26 +99,35 @@ def train_from_spec_paths(action_spec_path: str | Path, scene_config_path: str |
         trainer = PPOTrainer(
             runner,
             action_spec,
-            runtime_cfg.output_dir,
+            output_dir,
             ppo_cfg,
             use_swanlab=runtime_cfg.use_swanlab,
             swanlab_project=runtime_cfg.swanlab_project,
+        )
+        registry.register_training(
+            action_spec,
+            task_config_path,
+            scene_config_path,
+            output_dir=output_dir,
+            run_dir=trainer.run_dir,
         )
         (trainer.run_dir / 'action_spec.json').write_text(json.dumps(action_spec_data, ensure_ascii=False, indent=2), encoding='utf-8')
         (trainer.run_dir / 'scene_config.json').write_text(json.dumps(scene_data, ensure_ascii=False, indent=2), encoding='utf-8')
         (trainer.run_dir / 'resolved_action_spec.json').write_text(json.dumps(action_spec.to_dict(), ensure_ascii=False, indent=2), encoding='utf-8')
         (trainer.run_dir / 'resolved_training.json').write_text(json.dumps(runtime_cfg.to_dict(), ensure_ascii=False, indent=2), encoding='utf-8')
         trainer.train()
+        registry.mark_ready(action_spec.action_id, output_dir=output_dir, run_dir=trainer.run_dir)
         return trainer.run_dir
     finally:
         runner.close()
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Train a tank skill from action spec and scene JSON configs.')
-    parser.add_argument('--action-spec', required=True, help='Path to the action spec JSON.')
+    parser = argparse.ArgumentParser(description='Train a tank skill from task and scene JSON configs.')
+    parser.add_argument('--task-config', required=True, help='Path to the task JSON under configs/tasks.')
     parser.add_argument('--scene-config', required=True, help='Path to the scene JSON.')
-    parser.add_argument('--output-dir', required=True, help='Directory to save trained outputs.')
+    parser.add_argument('--output-dir', default=None, help='Directory to save trained outputs. Defaults to actions/trained/<action_id>.')
+    parser.add_argument('--registry-dir', default='actions/trained', help='Skill registry root.')
     parser.add_argument('--num-envs', type=int, default=8)
     parser.add_argument('--episodes-per-env', type=int, default=32)
     parser.add_argument('--update-epochs', type=int, default=4)
@@ -139,6 +152,7 @@ def main():
     args = parser.parse_args()
     runtime_cfg = TrainRuntimeConfig(
         output_dir=args.output_dir,
+        registry_dir=args.registry_dir,
         num_envs=args.num_envs,
         episodes_per_env=args.episodes_per_env,
         update_epochs=args.update_epochs,
@@ -161,7 +175,7 @@ def main():
         policy_trunk_layers=args.policy_trunk_layers,
         policy_activation=args.policy_activation,
     )
-    run_dir = train_from_spec_paths(args.action_spec, args.scene_config, runtime_cfg)
+    run_dir = train_from_config_paths(args.task_config, args.scene_config, runtime_cfg)
     print(f'training_complete: {run_dir}')
 
 
