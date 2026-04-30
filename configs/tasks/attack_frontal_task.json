@@ -9,10 +9,11 @@
     "enemy_id": {"mode": "choice", "choices": [0, 1, 2]}
   },
   "reward_weights": {
-    "progress_to_selected_enemy": 0.3,
-    "selected_enemy_proximity": 0.02,
-    "aim_align_selected_enemy": 0.03,
-    "selected_enemy_visible": 0.02,
+    "progress_to_selected_enemy": 0.2,
+    "distance_to_selected_enemy": 0.4,
+    "selected_enemy_proximity": 0.0,
+    "aim_align_selected_enemy": 0.1,
+    "selected_enemy_visible": 0.1,
     "selected_enemy_memory_valid": 0,
     "hit_selected_enemy": 30.0,
     "destroy_selected_enemy": 200.0,

@@ -35,6 +35,7 @@ MAX_BODY_TURN = 6.0
 MAX_TURRET_TURN = 8.0
 FIRE_RANGE = 1_000_000.0
 FIRE_CONE_DEG = 6.0
+CANNON_AUTO_SNAP_DEG = 5.0
 FIRE_COOLDOWN = 12
 TEAM_COLORS = {
     'red': (220, 60, 60),
@@ -255,6 +256,53 @@ class CombatEnv:
             return False
         return any_line_of_sight(self._turret_center(viewer), self._tank_body_vertices(target), self.obstacles)
 
+    def _enemy_circles(self, team: str) -> List[Tuple[Tuple[float, float], float, int]]:
+        enemy_team = 'blue' if team == 'red' else 'red'
+        return [
+            ((float(unit['x']), float(unit['y'])), UNIT_RADIUS, int(unit['id']))
+            for unit in self.units[enemy_team].values()
+            if unit['alive']
+        ]
+
+    def _raycast_enemy_hit(self, team: str, origin: Tuple[float, float], angle_deg: float) -> Dict[str, Any]:
+        return raycast_hit(
+            origin,
+            float(angle_deg),
+            FIRE_RANGE,
+            tuple(self.map_size),
+            self.obstacles,
+            self._enemy_circles(team),
+        )
+
+    def _auto_snap_cannon_angle(self, team: str, unit: Dict[str, Any]) -> float:
+        current_angle = float(unit['turret_angle']) % 360.0
+        origin = self._turret_center(unit)
+        current_hit = self._raycast_enemy_hit(team, origin, current_angle)
+        if current_hit['kind'] == 'circle':
+            return current_angle
+
+        best_angle = current_angle
+        best_delta = CANNON_AUTO_SNAP_DEG + 1e-6
+        enemy_team = 'blue' if team == 'red' else 'red'
+        for enemy in self.units[enemy_team].values():
+            if not enemy['alive']:
+                continue
+            desired_angle = angle_to(origin, (float(enemy['x']), float(enemy['y'])))
+            delta = abs(angle_diff_deg(desired_angle, current_angle))
+            if delta > CANNON_AUTO_SNAP_DEG or delta >= best_delta:
+                continue
+            candidate_hit = self._raycast_enemy_hit(team, origin, desired_angle)
+            if candidate_hit['kind'] != 'circle' or int(candidate_hit['payload']) != int(enemy['id']):
+                continue
+            best_angle = desired_angle
+            best_delta = delta
+        return best_angle % 360.0
+
+    def _auto_snap_cannon_lines(self, team: str) -> None:
+        for unit in self.units[team].values():
+            if unit['alive']:
+                unit['turret_angle'] = self._auto_snap_cannon_angle(team, unit)
+
     def _discrete_to_continuous(self, action_raw, action_mask):
         action = [0.0, 0.0, 0.0]
         if 0 in action_mask:
@@ -383,19 +431,7 @@ class CombatEnv:
             origin = self._turret_center(attacker)
             angle = float(attacker['turret_angle'])
 
-            circles = [
-                ((float(unit['x']), float(unit['y'])), UNIT_RADIUS, int(unit['id']))
-                for unit in self.units[enemy_team].values()
-                if unit['alive']
-            ]
-            hit = raycast_hit(
-                origin,
-                angle,
-                FIRE_RANGE,
-                tuple(self.map_size),
-                self.obstacles,
-                circles,
-            )
+            hit = self._raycast_enemy_hit(team, origin, angle)
             if hit['kind'] != 'circle':
                 continue
             target_id = int(hit['payload'])
@@ -545,6 +581,7 @@ class CombatEnv:
                 'max_turret_turn': MAX_TURRET_TURN,
                 'fire_range': FIRE_RANGE,
                 'fire_cone_deg': FIRE_CONE_DEG,
+                'cannon_auto_snap_deg': CANNON_AUTO_SNAP_DEG,
                 'fire_cooldown': FIRE_COOLDOWN,
                 'unit_radius': UNIT_RADIUS,
                 'initial_hp': INITIAL_HP,
@@ -622,6 +659,8 @@ class CombatEnv:
                 unit['cooldown'] = max(0, unit['cooldown'] - 1)
 
         self._update_visibility_and_memory()
+        self._auto_snap_cannon_lines('red')
+        self._auto_snap_cannon_lines('blue')
         self._auto_fire_team('red')
         self._auto_fire_team('blue')
         self._update_visibility_and_memory()
@@ -659,6 +698,7 @@ class CombatEnv:
         selected_enemy_destroyed_state = False
         aim_align_selected_enemy = 0.0
         progress_to_selected_enemy = 0.0
+        distance_to_selected_enemy = 0.0
         selected_enemy_proximity = 0.0
         if enemy_id is not None and int(enemy_id) in self.units['blue']:
             enemy_id = int(enemy_id)
@@ -676,6 +716,7 @@ class CombatEnv:
             selected_enemy_destroyed_state = not bool(enemy['alive'])
             if enemy['alive']:
                 progress_to_selected_enemy = (previous_enemy_distance - current_enemy_distance) / 25.0
+                distance_to_selected_enemy = min(1.0, current_enemy_distance / map_diagonal)
                 selected_enemy_proximity = max(0.0, 1.0 - current_enemy_distance / map_diagonal)
         else:
             task_values['_prev_selected_enemy_dist'] = 0.0
@@ -732,6 +773,7 @@ class CombatEnv:
             'heading_align_to_target_point': -float(heading_align),
             'forward_speed': float(forward_speed),
             'progress_to_selected_enemy': progress_to_selected_enemy,
+            'distance_to_selected_enemy': -float(distance_to_selected_enemy),
             'selected_enemy_proximity': -float(selected_enemy_proximity),
             'aim_align_selected_enemy': -float(aim_align_selected_enemy),
             'selected_enemy_visible': -float(selected_enemy_visible),
