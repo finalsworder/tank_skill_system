@@ -1,0 +1,36 @@
+{
+  "action_id": "protect",
+  "description": "Move quickly to a selected ally and stay close enough to reinforce it.",
+  "action_mask": [0, 1],
+  "task_slots": {
+    "target_x": {"mode": "none"},
+    "target_y": {"mode": "none"},
+    "ally_id": {"mode": "choice", "choices": [1]},
+    "enemy_id": {"mode": "none"}
+  },
+  "reward_weights": {
+    "progress_to_selected_ally": 0.45,
+    "selected_ally_proximity": 0.05,
+    "cover_ally_hold": 0.0,
+    "collision_penalty": 0.8,
+    "time_penalty": 0.03
+  },
+  "intel": {
+    "reveal_selected_enemy_on_reset": false,
+    "share_team_memory": true
+  },
+  "termination": {
+    "success": ["cover_ally_hold"],
+    "failure": ["self_destroyed"],
+    "max_steps": 200,
+    "reach_radius": 50.0,
+    "hold_steps": 3
+  },
+  "observation": {
+    "radar_num_rays": 72,
+    "radar_max_distance": 450.0,
+    "radar_body_relative": true,
+    "max_allies": 2,
+    "max_enemies": 3
+  }
+}

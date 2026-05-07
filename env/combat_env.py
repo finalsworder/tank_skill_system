@@ -32,7 +32,7 @@ MAX_FORWARD = 4.0
 MAX_BACKWARD = 2.0
 MAX_STRAFE = 4.0
 MAX_BODY_TURN = 6.0
-MAX_TURRET_TURN = 8.0
+MAX_TURRET_TURN = 5.0
 FIRE_RANGE = 1_000_000.0
 FIRE_CONE_DEG = 6.0
 CANNON_AUTO_SNAP_DEG = 5.0
@@ -72,6 +72,7 @@ class CombatEnv:
         self.red_script_policies = {}
         self.blue_script_policies = {}
         self.render_targets = {'red': {}, 'blue': {}}
+        self.turret_locks = {'red': {}, 'blue': {}}
         self._screen = None
         self._pygame = None
 
@@ -92,6 +93,7 @@ class CombatEnv:
         self.red_script_policies = dict(red_script_policies or reset_template.ally_policies)
         self.blue_script_policies = dict(blue_script_policies or reset_template.enemy_policies)
         self.units = {'red': {}, 'blue': {}}
+        self.turret_locks = {'red': {}, 'blue': {}}
         self.step_count = 0
         self.last_step_records = {
             'red_hits': {},
@@ -303,6 +305,53 @@ class CombatEnv:
             if unit['alive']:
                 unit['turret_angle'] = self._auto_snap_cannon_angle(team, unit)
 
+    def _locked_turret_angle(self, team: str, unit: Dict[str, Any], enemy_id: int) -> Optional[float]:
+        enemy_team = 'blue' if team == 'red' else 'red'
+        target = self.units[enemy_team].get(enemy_id)
+        if target is None or not unit['alive'] or not target['alive']:
+            return None
+
+        origin = self._turret_center(unit)
+        desired_angle = angle_to(origin, (float(target['x']), float(target['y'])))
+        hit = self._raycast_enemy_hit(team, origin, desired_angle)
+        if hit['kind'] != 'circle' or int(hit['payload']) != int(enemy_id):
+            return None
+        return desired_angle % 360.0
+
+    def _capture_current_turret_locks(self) -> Dict[str, set[int]]:
+        locked_now = {'red': set(), 'blue': set()}
+        for team in ['red', 'blue']:
+            for unit_id, unit in self.units[team].items():
+                if not unit['alive']:
+                    self.turret_locks[team].pop(int(unit_id), None)
+                    continue
+                locked_enemy_id = self.turret_locks[team].get(int(unit_id))
+                if locked_enemy_id is not None:
+                    locked_angle = self._locked_turret_angle(team, unit, int(locked_enemy_id))
+                    if locked_angle is None:
+                        self.turret_locks[team].pop(int(unit_id), None)
+                    else:
+                        unit['turret_angle'] = locked_angle
+                        locked_now[team].add(int(unit_id))
+                    continue
+                hit = self._raycast_enemy_hit(team, self._turret_center(unit), float(unit['turret_angle']))
+                if hit['kind'] == 'circle':
+                    self.turret_locks[team][int(unit_id)] = int(hit['payload'])
+                    locked_now[team].add(int(unit_id))
+        return locked_now
+
+    def _apply_turret_locks(self) -> None:
+        for team in ['red', 'blue']:
+            for unit_id, unit in self.units[team].items():
+                enemy_id = self.turret_locks[team].get(int(unit_id))
+                if enemy_id is None:
+                    continue
+                locked_angle = self._locked_turret_angle(team, unit, int(enemy_id))
+                if locked_angle is None:
+                    self.turret_locks[team].pop(int(unit_id), None)
+                    continue
+                unit['turret_angle'] = locked_angle
+
     def _discrete_to_continuous(self, action_raw, action_mask):
         action = [0.0, 0.0, 0.0]
         if 0 in action_mask:
@@ -316,7 +365,7 @@ class CombatEnv:
             action[2] = -MAX_TURRET_TURN if choice == 0 else (MAX_TURRET_TURN if choice == 2 else 0.0)
         return action
 
-    def _apply_motion(self, unit, action):
+    def _apply_motion(self, unit, action, lock_turret: bool = False):
         if not unit['alive']:
             return False
         original_x, original_y = unit['x'], unit['y']
@@ -360,7 +409,8 @@ class CombatEnv:
         unit['speed'] = math.hypot(actual_dx, actual_dy)
         if unit['speed'] > 1e-6:
             unit['body_angle'] = math.degrees(math.atan2(actual_dy, actual_dx)) % 360.0
-        unit['turret_angle'] = (float(unit['turret_angle']) + turret_turn) % 360.0
+        if not lock_turret:
+            unit['turret_angle'] = (float(unit['turret_angle']) + turret_turn) % 360.0
         return collided
 
     def _script_action(self, team, unit_id):
@@ -648,19 +698,22 @@ class CombatEnv:
         for blue_id in self.units['blue'].keys():
             blue_actions[blue_id] = self._script_action('blue', blue_id)
 
+        locked_turrets = self._capture_current_turret_locks()
         for red_id, action in red_actions.items():
-            if self._apply_motion(self.units['red'][red_id], action):
+            if self._apply_motion(self.units['red'][red_id], action, red_id in locked_turrets['red']):
                 self.last_step_records['red_collisions'].add(red_id)
         for blue_id, action in blue_actions.items():
-            self._apply_motion(self.units['blue'][blue_id], action)
+            self._apply_motion(self.units['blue'][blue_id], action, blue_id in locked_turrets['blue'])
 
         for team in ['red', 'blue']:
             for unit in self.units[team].values():
                 unit['cooldown'] = max(0, unit['cooldown'] - 1)
 
         self._update_visibility_and_memory()
+        self._apply_turret_locks()
         self._auto_snap_cannon_lines('red')
         self._auto_snap_cannon_lines('blue')
+        self._capture_current_turret_locks()
         self._auto_fire_team('red')
         self._auto_fire_team('blue')
         self._update_visibility_and_memory()

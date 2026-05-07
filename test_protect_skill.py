@@ -1,7 +1,7 @@
 import torch
 from ppo.registry_io import load_policy_bundle
 
-BUNDLE_DIR = 'actions/trained/attack_frontal//20260505221649//best'
+BUNDLE_DIR = 'actions/trained/protect/best'
 EPISODES = 10000
 SEED = 12
 DEVICE = 'cpu'
